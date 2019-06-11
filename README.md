@@ -1,4 +1,4 @@
-This project provides the top 10 earthquakes by magnitude in the last 12 or 24
+This project provides the top 10 earthquakes by magnitude in the last 12 or 24 hours.
 
 ## Available Scripts
 
