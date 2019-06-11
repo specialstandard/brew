@@ -4,8 +4,6 @@ import './App.scss';
 import axios from 'axios'
 import moment from 'moment'
 
-import { loadOptions } from '@babel/core';
-
 const API_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson'
 
 function App() {
@@ -16,30 +14,12 @@ function App() {
     const [error, setError] = useState(null)
     const [hours, setHours] = useState(24)
 
-    useEffect(() => {
-        const calculateTopQuakes = () => {
-            const now = moment()
-
-            const filteredFeaturesSorted = allFeatures.filter((feature) => (
-                now.diff(moment(feature.properties.time), 'h') < hours
-            )).slice(0, 10)
-
-            console.log('filteredFeaturesSorted: ', filteredFeaturesSorted)
-            // console.log('filteredFeaturesSorted: ', filteredFeaturesSorted.);
-            setFilteredFeatures(filteredFeaturesSorted)
-            // console.log('result: ', result);
-            setIsLoading(false)
-        }
-        calculateTopQuakes()
-    }, [hours, allFeatures])
-
+    // Initial API Query
     useEffect(() => {
         const getResult = () => {
             return axios.get(API_URL).then(response => {
                 const sortedFeatures = response.data.features.sort((a, b) => b.properties.mag - a.properties.mag)
-                console.log('sortedFeatures: ', sortedFeatures);
                 setAllFeatures(sortedFeatures)
-                // setIsLoading(false)
                 setError(false)
 
             })
@@ -52,69 +32,67 @@ function App() {
         getResult()
     }, [])
 
+    // Calculate top 10 quakes when hours or featurs change
+    useEffect(() => {
+        const calculateTopQuakes = () => {
+            const now = moment()
+            const filteredFeaturesSorted = allFeatures.filter((feature) => (
+                now.diff(moment(feature.properties.time), 'h') < hours
+            )).slice(0, 10)
+            setFilteredFeatures(filteredFeaturesSorted)
+            setIsLoading(false)
+        }
+        calculateTopQuakes()
+    }, [hours, allFeatures])
+
+    // Hours select change handler
     const handleChange = (event) => {
-        console.log('value: ', event.target.value);
         setHours(event.target.value)
     };
 
     if(isLoading) {
+        // if Loading show loading message
         return <div>Loading...</div>
+    } else if (error) {
+        // if error show error message
+        return <div>Error {error}</div>
     } else {
         return (
             <div className="App">
-
-                <select value={hours} onChange={handleChange}>
-                    {/* <option>Select Hours</option> */}
-                    <option value="12">12 Hours</option>
-                    <option value="24">24 Hours</option>
+                <h1>Top 10 Earthquake Magnitudes</h1>
+                <select data-testid="hoursValue" className="select" value={hours} onChange={handleChange}>
+                    <option value="12">The Last 12 Hours</option>
+                    <option value="24">The Last 24 Hours</option>
                 </select>
-                <div>{filteredFeatures && filteredFeatures.map((feature) =>(
-                    <>
+
+                {/* Magnitudes and Places */}
+                <div className="earthquake-list">{filteredFeatures && filteredFeatures.map((feature) =>(
+                    <div className="features-container">
                         <div className="magnitude">{feature.properties.mag}</div>
                         <div className="place">{feature.properties.place}</div>
-                    </>
-
-                ))}</div>
-
-                    <div
-                        style={{
-                        width: "400px",
-                        height: "300px"
-                        }}
-                    >
-                        <Chart
-                        data={[
-                            {
-                            label: "Series 1",
-                            data: filteredFeatures.map((item, i) => [i, item.properties.mag])
-                            },
-
-                        ]}
-                        axes={[
-                            { primary: true, type: "linear", position: "bottom" },
-                            { type: "linear", position: "left" }
-                        ]}
-                        />
                     </div>
+                ))}
+                </div>
 
-                {/* <header className="App-header">
-                    <img src={logo} className="App-logo" alt="logo" />
-                    <p>
-                        Edit <code>src/App.js</code> and save to reload.
-            </p>
-                    <a
-                        className="App-link"
-                        href="https://reactjs.org"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Earthquakes
-            </a>
-                </header> */}
+                {/* Chart of Earthquake Magnitudes */}
+                <div className="chart-container">
+                    <Chart
+                    data={[
+                        {
+                        label: "Series 1",
+                        data: filteredFeatures.map((item, i) => [i, item.properties.mag])
+                        },
+
+                    ]}
+                    axes={[
+                        { primary: true, type: "linear", position: "bottom" },
+                        { type: "linear", position: "left" }
+                    ]}
+                    />
+                </div>
             </div>
         );
     }
-
 }
 
 export default App;

@@ -1,4 +1,4 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project provides the top 10 earthquakes by magnitude in the last 12 or 24
 
 ## Available Scripts
 
